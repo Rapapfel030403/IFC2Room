@@ -9,6 +9,7 @@
 
     <!-- einheitlicher Ausgabepfad pro Revit-Version -->
     <BaseOutputPath>bin\$(RevitYear)</BaseOutputPath>
+    <BaseIntermediateOutputPath>obj\$(RevitYear)\</BaseIntermediateOutputPath>
 
     <!-- WPF/XAML -->
     <UseWPF>true</UseWPF>
