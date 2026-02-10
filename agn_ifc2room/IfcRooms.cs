@@ -217,6 +217,30 @@ namespace agn.ifc2revitRooms
             return roomList;
         }
 
+        /// <summary>
+        /// Tries to set a unique name on a Revit element.
+        /// If the desired name already exists, appends a suffix " (2)", " (3)", etc.
+        /// </summary>
+        private static void TrySetUniqueName(Element element, string desiredName)
+        {
+            try
+            {
+                element.Name = desiredName;
+            }
+            catch
+            {
+                for (int i = 2; i <= 100; i++)
+                {
+                    try
+                    {
+                        element.Name = desiredName + " (" + i + ")";
+                        break;
+                    }
+                    catch { }
+                }
+            }
+        }
+
         public static void lvlTrans(List<IfcRooms> Rooms, string IfcPath, Document doc, ViewFamilyType viewFam)
         {
             double scalingFactor;
@@ -257,7 +281,7 @@ namespace agn.ifc2revitRooms
                             }
                             catch
                             {
-                                doc.GetElement(eleId).Name = "DELETION_UNSUCCESSFULL(View_Opened)_Please_delete_manually";
+                                TrySetUniqueName(doc.GetElement(eleId), "DELETION_UNSUCCESSFULL(View_Opened)_Please_delete_manually");
                             };
                         }
                     }
@@ -277,11 +301,11 @@ namespace agn.ifc2revitRooms
                         Level newLvl = Level.Create(doc, UnitUtils.ConvertToInternalUnits(storey.Elevation.Value * scalingFactor, UnitTypeId.Meters));
 
 #endif
-                        newLvl.Name = storey.Name;
+                        TrySetUniqueName(newLvl, storey.Name);
 
                         ViewPlan newViewPlan = ViewPlan.Create(doc, viewFam.Id, newLvl.Id);
 
-                        newViewPlan.Name = storey.Name;
+                        TrySetUniqueName(newViewPlan, storey.Name);
 
                         newViews.Add(newViewPlan);
                     }
@@ -291,13 +315,13 @@ namespace agn.ifc2revitRooms
                     {
                         foreach (ViewPlan vp in newViews)
                         {
-                            if (room.level == vp.Name)
+                            if (room.level == vp.Name || room.level == vp.GenLevel.Name)
                             {
                                 room.view = vp;
                             }
                         }
                     }
-                } 
+                }
                 else
                 {
                     List<Xbim.Ifc4.Interfaces.IIfcBuildingStorey> allstories = null;
@@ -331,7 +355,7 @@ namespace agn.ifc2revitRooms
                             }
                             catch
                             {
-                                doc.GetElement(eleId).Name = "DELETION_UNSUCCESSFULL(View_Opened)_Please_delete_manually";
+                                TrySetUniqueName(doc.GetElement(eleId), "DELETION_UNSUCCESSFULL(View_Opened)_Please_delete_manually");
                             };
                         }
                     }
@@ -351,11 +375,11 @@ namespace agn.ifc2revitRooms
                         Level newLvl = Level.Create(doc, UnitUtils.ConvertToInternalUnits(storey.Elevation.Value * scalingFactor, UnitTypeId.Meters));
 
 #endif
-                        newLvl.Name = storey.Name;
+                        TrySetUniqueName(newLvl, storey.Name);
 
                         ViewPlan newViewPlan = ViewPlan.Create(doc, viewFam.Id, newLvl.Id);
 
-                        newViewPlan.Name = storey.Name;
+                        TrySetUniqueName(newViewPlan, storey.Name);
 
                         newViews.Add(newViewPlan);
                     }
@@ -365,7 +389,7 @@ namespace agn.ifc2revitRooms
                     {
                         foreach (ViewPlan vp in newViews)
                         {
-                            if (room.level == vp.Name)
+                            if (room.level == vp.Name || room.level == vp.GenLevel.Name)
                             {
                                 room.view = vp;
                             }
@@ -374,7 +398,7 @@ namespace agn.ifc2revitRooms
                 }
 
 
-                
+
 
             }
 
