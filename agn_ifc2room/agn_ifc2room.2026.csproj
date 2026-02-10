@@ -62,17 +62,5 @@
     <None Include="README.md" />
   </ItemGroup>
 
-  <!-- Nach dem Build ins Revit-Bundle kopieren -->
-  <Target Name="CopyToRevitBundle" AfterTargets="Build">
-    <PropertyGroup>
-      <BundleDir>$(AppData)\Autodesk\ApplicationPlugins\agn-apps_ifc2room.bundle\Contents\$(RevitYear)</BundleDir>
-    </PropertyGroup>
-    <Message Text="Kopiere Ausgabedateien nach '$(BundleDir)'" Importance="high" />
-    <ItemGroup>
-      <BuiltDlls Include="$(OutDir)*.dll" />
-    </ItemGroup>
-    <MakeDir Directories="$(BundleDir)" />
-    <Copy SourceFiles="@(BuiltDlls)" DestinationFolder="$(BundleDir)" SkipUnchangedFiles="true" />
-  </Target>
 
 </Project>
