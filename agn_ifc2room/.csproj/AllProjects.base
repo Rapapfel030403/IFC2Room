@@ -1,0 +1,29 @@
+<Project>
+
+  <!-- Gemeinsame Projekteinstellungen -->
+  <PropertyGroup>
+    <RootNamespace>agn.ifc2revitRooms</RootNamespace>
+    <AssemblyName>agn_ifc2room</AssemblyName>
+  </PropertyGroup>
+
+  <!-- DBG20-Flag fuer Revit 2021 und aelter (aeltere Unit-API mit DisplayUnitType) -->
+  <PropertyGroup Condition="$(RevitYear) &lt; 2022">
+    <DefineConstants>$(DefineConstants);DBG20</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Revit API Referenzen -->
+  <ItemGroup>
+    <Reference Include="RevitAPI">
+      <HintPath>$(RevitApiPath)\RevitAPI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="RevitAPIUI">
+      <HintPath>$(RevitApiPath)\RevitAPIUI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- SDK Targets (zweiter Teil des SDK-Imports) -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+</Project>

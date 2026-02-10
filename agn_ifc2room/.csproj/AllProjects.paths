@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- SDK Props (erster Teil des SDK-Imports) -->
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <PropertyGroup>
+    <!-- Pfad zur Revit-Installation (kann per Umgebungsvariable ueberschrieben werden) -->
+    <RevitApiPath Condition="'$(RevitApiPath)' == ''">C:\Program Files\Autodesk\Revit $(RevitYear)</RevitApiPath>
+  </PropertyGroup>
+
+</Project>
