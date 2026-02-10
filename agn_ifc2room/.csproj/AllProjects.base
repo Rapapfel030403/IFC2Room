@@ -4,6 +4,7 @@
   <PropertyGroup>
     <RootNamespace>agn.ifc2revitRooms</RootNamespace>
     <AssemblyName>agn_ifc2room</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <!-- DBG20-Flag fuer Revit 2021 und aelter (aeltere Unit-API mit DisplayUnitType) -->
