@@ -26,11 +26,10 @@ namespace agn.ifc2revitRooms
         private XYZ tagPoint;
         private ViewPlan view;
         private double height;
-        private double bottomElevation;
 
 
         public IfcRooms(string Name, string Number, string Level, CurveArray Footprint, XYZ TagPoint, double Height,
-            string GlobalId, double BottomElevation)
+            string GlobalId)
         {
             name = Name;
             number = Number;
@@ -39,7 +38,6 @@ namespace agn.ifc2revitRooms
             tagPoint = TagPoint;
             height = Height;
             globalId = GlobalId;
-            bottomElevation = BottomElevation;
         }
 
         public static List<IfcRooms> fetchRooms(string IfcPath, Document doc)
@@ -190,10 +188,7 @@ namespace agn.ifc2revitRooms
 
 #endif
 
-                            //get actual bottom Z-coordinate from bottom face vertices
-                            double bottomZ = pointsTri[indices[0]].Z;
-
-                            roomList.Add(new IfcRooms(roomName, roomNumber, instanceLevel, curves, triCentroid, roomHeight, globalIdTemp, bottomZ));
+                            roomList.Add(new IfcRooms(roomName, roomNumber, instanceLevel, curves, triCentroid, roomHeight, globalIdTemp));
 
                         }
                         catch 
@@ -443,10 +438,7 @@ namespace agn.ifc2revitRooms
                 newRoom.Name = this.name;
                 newRoom.Number = this.number;
                         
-                //set lower and upper offset based on actual IFC coordinates
-                double lowerOffset = this.bottomElevation - this.view.GenLevel.Elevation;
-                newRoom.get_Parameter(BuiltInParameter.ROOM_LOWER_OFFSET).Set(lowerOffset);
-                newRoom.get_Parameter(BuiltInParameter.ROOM_UPPER_OFFSET).Set(lowerOffset + this.height);
+                newRoom.get_Parameter(BuiltInParameter.ROOM_UPPER_OFFSET).Set(this.height);
                                 
                 //set GlobalID in the built-in parameter
                 newRoom.get_Parameter(BuiltInParameter.IFC_GUID).Set(this.globalId);
