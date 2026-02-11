@@ -444,15 +444,21 @@ namespace agn.ifc2revitRooms
                 double lowerOffset = this.bottomElevation - this.view.GenLevel.Elevation;
                 double upperOffset = lowerOffset + this.height;
 
-                //ensure view range cut plane is above room's lower offset
-                PlanViewRange viewRange = this.view.GetViewRange();
-                double cutPlane = viewRange.GetOffset(PlanViewPlane.CutPlane);
-                if (lowerOffset + 0.5 > cutPlane)
+                //set level computation height above room's lower offset to avoid
+                //"lower offset above computation height" error
+                try
                 {
-                    viewRange.SetOffset(PlanViewPlane.CutPlane, upperOffset);
-                    viewRange.SetOffset(PlanViewPlane.TopClipPlane, upperOffset + 1.0);
-                    this.view.SetViewRange(viewRange);
+                    Parameter compHeightParam = this.view.GenLevel.get_Parameter(BuiltInParameter.LEVEL_ROOM_COMPUTATION_HEIGHT);
+                    if (compHeightParam != null && !compHeightParam.IsReadOnly)
+                    {
+                        double currentCompHeight = compHeightParam.AsDouble();
+                        if (lowerOffset + 0.1 > currentCompHeight)
+                        {
+                            compHeightParam.Set(lowerOffset + 0.1);
+                        }
+                    }
                 }
+                catch { }
 
                 doc.Create.NewRoomBoundaryLines(this.view.SketchPlane, newCurves, this.view);
 
