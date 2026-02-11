@@ -26,10 +26,11 @@ namespace agn.ifc2revitRooms
         private XYZ tagPoint;
         private ViewPlan view;
         private double height;
+        private double bottomElevation;
 
 
         public IfcRooms(string Name, string Number, string Level, CurveArray Footprint, XYZ TagPoint, double Height,
-            string GlobalId)
+            string GlobalId, double BottomElevation)
         {
             name = Name;
             number = Number;
@@ -38,6 +39,7 @@ namespace agn.ifc2revitRooms
             tagPoint = TagPoint;
             height = Height;
             globalId = GlobalId;
+            bottomElevation = BottomElevation;
         }
 
         public static List<IfcRooms> fetchRooms(string IfcPath, Document doc)
@@ -66,6 +68,17 @@ namespace agn.ifc2revitRooms
                     //ifcspaces are filtered
                     if (product.ToString().Contains("SPACE"))
                     {
+                        //skip rooms where Type Name contains "Flächen: "
+                        string objectType = (product as IIfcObject)?.ObjectType?.ToString() ?? "";
+                        string typeName = "";
+                        try
+                        {
+                            typeName = (product as IIfcObject)?.IsTypedBy?.FirstOrDefault()?.RelatingType?.Name?.ToString() ?? "";
+                        }
+                        catch { }
+                        if (objectType.Contains("Flächen: ") || typeName.Contains("Flächen: "))
+                            continue;
+
                         //get geometrical data
                         try
                         {
@@ -180,15 +193,12 @@ namespace agn.ifc2revitRooms
 
                             
 
-#if DBG20
+                            //get exact bottom and top Z from IFC geometry vertices
+                            double bottomZ = pointsTri.Min(p => p.Z);
+                            double topZ = pointsTri.Max(p => p.Z);
+                            double roomHeight = topZ - bottomZ;
 
-                            double roomHeight = UnitUtils.ConvertToInternalUnits(instance.BoundingBox.SizeZ * scalingFactor, DisplayUnitType.DUT_METERS_CENTIMETERS);
-#else
-                            double roomHeight = UnitUtils.ConvertToInternalUnits(instance.BoundingBox.SizeZ * scalingFactor, UnitTypeId.Meters);
-
-#endif
-
-                            roomList.Add(new IfcRooms(roomName, roomNumber, instanceLevel, curves, triCentroid, roomHeight, globalIdTemp));
+                            roomList.Add(new IfcRooms(roomName, roomNumber, instanceLevel, curves, triCentroid, roomHeight, globalIdTemp, bottomZ));
 
                         }
                         catch 
@@ -431,15 +441,30 @@ namespace agn.ifc2revitRooms
             //place boundaries, rooms and set parameters
             try
             {
+                double lowerOffset = this.bottomElevation - this.view.GenLevel.Elevation;
+                double upperOffset = lowerOffset + this.height;
+
+                //ensure view range cut plane is above room's lower offset
+                PlanViewRange viewRange = this.view.GetViewRange();
+                double cutPlane = viewRange.GetOffset(PlanViewPlane.CutPlane);
+                if (lowerOffset + 0.5 > cutPlane)
+                {
+                    viewRange.SetOffset(PlanViewPlane.CutPlane, upperOffset);
+                    viewRange.SetOffset(PlanViewPlane.TopClipPlane, upperOffset + 1.0);
+                    this.view.SetViewRange(viewRange);
+                }
+
                 doc.Create.NewRoomBoundaryLines(this.view.SketchPlane, newCurves, this.view);
 
                 Room newRoom = doc.Create.NewRoom(this.view.GenLevel, new UV(this.tagPoint.X, this.tagPoint.Y));
 
                 newRoom.Name = this.name;
                 newRoom.Number = this.number;
-                        
-                newRoom.get_Parameter(BuiltInParameter.ROOM_UPPER_OFFSET).Set(this.height);
-                                
+
+                //set lower and upper offset to match exact IFC coordinates
+                newRoom.get_Parameter(BuiltInParameter.ROOM_LOWER_OFFSET).Set(lowerOffset);
+                newRoom.get_Parameter(BuiltInParameter.ROOM_UPPER_OFFSET).Set(upperOffset);
+
                 //set GlobalID in the built-in parameter
                 newRoom.get_Parameter(BuiltInParameter.IFC_GUID).Set(this.globalId);
             }
